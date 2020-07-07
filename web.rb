@@ -8,6 +8,7 @@ $stdout.sync = true # Get puts to show up in heroku logs
 
 Dotenv.load
 Stripe.api_key = ENV['STRIPE_TEST_SECRET_KEY']
+Stripe.api_version = '2020-03-02; oxxo_beta=v2'
 
 use Rack::Session::EncryptedCookie,
   :secret => 'replace_me_with_a_real_secret_key' # Actually use something secret here!
@@ -213,7 +214,11 @@ post '/create_payment_intent' do
   payload = params
 
   if request.content_type != nil and request.content_type.include? 'application/json' and params.empty?
-      payload = Sinatra::IndifferentHash[JSON.parse(request.body.read)]
+    request_body = request.body.read
+    log_info('START request body')
+    log_info(request_body)
+    log_info('END request body')
+    payload = Sinatra::IndifferentHash[JSON.parse(request_body)]
   end
 
   # Calculate how much to charge the customer
@@ -355,7 +360,7 @@ def price_lookup(product)
 end
 
 def calculate_price(products, shipping)
-  amount = 1099  # Default amount.
+  amount = 3000  # Default amount.
 
   if products
     amount = products.reduce(0) { | sum, product | sum + price_lookup(product) }
